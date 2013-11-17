@@ -1,7 +1,23 @@
-﻿@{
-    string input;
-    using(var reader = new StreamReader(Request.InputStream)){
-        input = reader.ReadToEnd();
+﻿@using System.Collections.Specialized;
+@using System.Text;
+@{
+    var httpWebRequest = (HttpWebRequest)WebRequest.Create("https://netduino.firebaseio.com/morsecode/.json");
+    httpWebRequest.ContentType = "application/x-www-form-urlencoded";
+    httpWebRequest.Method = "POST";
+
+    using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+    {
+
+    string json = "{ \"morseMessage\": \"" + Request["morseMessage"] + "\", \"textMessage\": \"" + Request["textMessage"] + "\" }";
+
+    streamWriter.Write(json);
+    streamWriter.Flush();
+    streamWriter.Close();
+    }
+    var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+    using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+    {
+        var result = streamReader.ReadToEnd();
     }
 }
 
@@ -10,22 +26,9 @@
 <html lang="en">
     <head>
         <meta charset="utf-8" />
-        <title></title>
+        <title>Netduino</title>
     </head>
     <body>
-        <div>
-            <h3>Input Stream</h3>
-            @Server.UrlDecode(input)
-        </div>
-        <div>
-            @if(Request.Form.Count > 0){
-                <h3>Request Form</h3>
-                foreach(string item in Request.Form){
-                    <div>@item  :  @Request[item]</div>
-            }
-        }
-        <h3>Params</h3>
-        @Request.Params
-        </div>
+        Json = @json
     </body>
 </html>
